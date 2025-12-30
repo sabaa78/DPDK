@@ -83,3 +83,13 @@ Alternatively, the following method can be used:
 sudo sysctl -w vm.nr_hugepages=1024
 mount -t hugetlbfs none /dev/hugepages
 ```
+## 3. Create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
+Within the dpdk-/build directory, execute the testpmd application using the following command:
+```bash
+sudo LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblttng-ust-cyg-profile.so.1 ./app/dpdk-testpmd -l 0-1 -n 2   --vdev=net_tap0,iface=tap0   --vdev=net_tap1,iface=tap1   --   -i
+```
+### Functionality:
+- ** Creates net_tap0 and net_tap1 virtual devices **
+- **Assigns 2 CPU cores (-l 0-1)**
+- **Starts in interactive mode (-i)**
+
