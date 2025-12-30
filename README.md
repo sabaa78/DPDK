@@ -95,12 +95,11 @@ sudo LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblttng-ust-cyg-profile.so.1 ./app/dp
 
 ##4. Create Additional RX/TX Queues
 In the following step, we will add a new queue while operating in TAP mode. However, before proceeding, it is recommended to retrieve relevant configuration details using the show config fwd command.
+
 ##5. Create Flow Filtering Rule in testpmd
 To direct specific types of traffic to designated queues, you can create a flow filtering rule in testpmd using the following command.
 `flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end`
-##5. Create Flow Filtering Rule in testpmd
-To direct specific types of traffic to designated queues, you can create a flow filtering rule in testpmd using the following command.
-`flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end`
+
 ##6. Install and Run tcpreplay
 install [tcpreplay](https://github.com/appneta/tcpreplay/releases/tag/v4.5.1) from main source.
 
