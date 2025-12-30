@@ -145,8 +145,15 @@ However, in the output of the second image, which is related to the state withou
 This output shows that in the no-rule mode we recorded more events.
 In the case with rule we have more valleys:
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/72cd6bb7-5d1f-4671-a8ed-910da4306102" />
-## `pmd_rx_burst`
-After the comparison made in the two below modes, we arrive at this function `pmd_rx_burst` which has a time difference of 1 second between the two modes with and without rules in the entire process of 100 times.
+
+In this image, the events highlighted in color are the points that create the largest time difference in the execution path and actually act as a bottleneck in the tracing process. Although the time difference between these events is on the order of several nanoseconds, this small difference causes the test execution time to increase when the rule and filter are active, and as a result, the number of recorded events to decrease.
+The key events identified in this trace are:
+### `rte_pktmbuf_alloc`
+Responsible for allocating a new mbuf from the mempool for network packets. This step directly affects the latency of packet processing.
+### `rte_pktmbuf_headroom`
+Checks the free space at the beginning of the mbuf (headroom) to add headers. It is very useful in the packet sending/receiving path.
+### `rte_net_get_ptype`
+This event is responsible for detecting the packet protocol type (Packet Type) (such as IPv4, IPv6, TCP, UDP, etc.). In tracing, ptype plays an important role in packet classification and applying rules and filters, and for this reason it is considered one of the main factors in increasing the overhead and observed time difference. In general, the activation of these events in the hot-path of packet processing, even with a very small time difference, increases the test time and reduces the event recording rate in rule-based tracing mode.
 <img width="1850" height="965" alt="image" src="https://github.com/user-attachments/assets/0800e298-3e69-4cd5-9b1f-110bfe29644f" />
 <img width="1850" height="965" alt="image" src="https://github.com/user-attachments/assets/cd6cfab2-3a97-4a83-b407-f98ae7f99371" />
 
