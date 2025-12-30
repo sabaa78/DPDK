@@ -65,3 +65,21 @@ Explanation
 - **Required to observe detailed DPDK packet-processing paths**
 
 
+### 1.4 Build and Install Using Ninja
+```bash
+cd build
+ninja
+meson install
+ldconfig
+```
+## 2. Configure hugepages and mount 1GB pagesize
+```bash
+echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+mkdir /mnt/huge
+mount -t hugetlbfs pagesize=1GB /mnt/huge
+```
+Alternatively, the following method can be used:
+```bash
+sudo sysctl -w vm.nr_hugepages=1024
+mount -t hugetlbfs none /dev/hugepages
+```
