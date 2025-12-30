@@ -1,2 +1,67 @@
 # DPDK
 Deep_Linux
+# Deep_Linux — DPDK Flow Rule CPU Cost (TAP + testpmd + LTTng)
+
+This project investigates the CPU processing cost imposed by configuring **DPDK Flow Rules** when using the **TAP PMD/driver** with **DPDK testpmd**, and aims to identify *where the cost comes from*.
+
+## Goals
+
+We want to quantify and explain the overhead introduced by flow-based filtering and steering, focusing on:
+
+- **UDP / TCP filtering**
+- **Directing packets to a specific RX queue**
+- **How expensive header parsing is**
+- **Why LTTng does not capture some behaviors / time spent**
+- **End-to-end path:** `tcpreplay → TAP → DPDK testpmd → (Flow Rule + LTTng tracing)`
+
+## Steps
+We can see steps of project here:
+
+- **We create synthetic traffic (pcap)**
+- **We send it through TAP**
+- **DPDK processes it**
+- **LTTng records every function called**
+- **TraceCompass analyzes where the CPU time goes**
+
+# Installing and Building DPDK with Function Tracing Support
+
+This document describes how to build **DPDK with user-space function tracing enabled** in order to analyze CPU processing cost using **LTTng**, particularly when using **testpmd** with the **TAP Poll Mode Driver (PMD)**.
+
+---
+
+## 1. Build DPDK with Function Tracing Enabled
+
+### 1.1 Download the latest DPDK release
+
+Retrieve the latest stable release from the official DPDK website:
+
+- https://www.dpdk.org/download/
+
+---
+
+### 1.2 Extract the archive
+
+```bash
+tar xJf dpdk-<version>.tar.xz
+cd dpdk-<version>
+```
+### 1.3 Configure the build environment (Meson)
+```bash
+meson setup build \
+  -Dexamples=all \
+  -Dlibdir=lib \
+  -Denable_trace_fp=true \
+  -Dc_args="-finstrument-functions"
+```
+
+Explanation
+
+-Denable_trace_fp=true
+- **Enables DPDK trace fast-path instrumentation.**
+- **-Dc_args="-finstrument-functions"**
+- **Instruments function entry and exit points at compile time.**
+- **This flag is mandatory for LTTng user-space function tracing:**
+- **Without it, LTTng may produce empty or incomplete traces**
+- **Required to observe detailed DPDK packet-processing paths**
+
+
