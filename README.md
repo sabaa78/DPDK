@@ -93,13 +93,70 @@ sudo LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblttng-ust-cyg-profile.so.1 ./app/dp
 - **Assigns 2 CPU cores (-l 0-1)**
 - **Starts in interactive mode (-i)**
 
-##4. Create Additional RX/TX Queues
+## 4. Create Additional RX/TX Queues
+
 In the following step, we will add a new queue while operating in TAP mode. However, before proceeding, it is recommended to retrieve relevant configuration details using the show config fwd command.
 
-##5. Create Flow Filtering Rule in testpmd
+## 5. Create Flow Filtering Rule in testpmd
 To direct specific types of traffic to designated queues, you can create a flow filtering rule in testpmd using the following command.
 `flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end`
 
-##6. Install and Run tcpreplay
+## 6. Install and Run tcpreplay
 install [tcpreplay](https://github.com/appneta/tcpreplay/releases/tag/v4.5.1) from main source.
+#### Note:
+remind to run tcpreplay with these flag:
+```bash
+./configure --disable-tuntap
+make
+sudo make install`
+```
+Next, in the `testpmd` terminal window, enter the command `start` , followed by `show port stats all` to observe the packet flow on TAP interface 0.
+
+# Tracing CPU and Packets with LTTNG
+In order to Automate the LTTng capture, create a shell script to configure the LTTng session. The script initializes the session, adds the necessary context fields, starts tracing, sleeps for a specified duration, and then stops and destroys the session.
+```bash
+touch script.sh
+chmod +x script.sh
+nano script.sh
+```
+Paste the following commands into the file:
+```bash
+#!/bin/bash
+lttng create libpcap
+lttng enable-channel --userspace --num-subbuf=4 --subbuf-size=40M channel0
+#lttng enable-channel --userspace channel0
+lttng enable-event --channel channel0 --userspace --all
+lttng add-context --channel channel0 --userspace --type=vpid --type=vtid --type=procname
+lttng start
+sleep 10
+lttng stop
+lttng destroy
+```
+### Explanation
+This script creates an LTTng tracing session named `libpcap` , configures a userspace tracing channel `(channel0)` with a fixed ring-buffer setup (4 sub-buffers, 40 MB each), and then enables all userspace tracepoints/events on that channel. It also enriches every recorded event with extra context fields—virtual process ID (vpid), virtual thread ID (vtid), and the process name (procname)—to make analysis easier. After starting the trace, it records for 10 seconds, then stops tracing and destroys the session (cleaning up the session and its configuration).
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/cf3a46d5-ad63-4457-b973-df068792407c" /> <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/10840826-f0eb-4f49-9be0-9ca1c050ed1d" />
+
+
+As can be seen:
+
+In the output of the first image, which is related to the state in which the rule is set, we see a total of 4,385,297 events recorded in 1 second
+However, in the output of the second image, which is related to the state without the rule, we see 4,554,239 events in the same time range. 
+This output shows that in the no-rule mode we recorded more events.
+In the case with rule we have more valleys:
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/72cd6bb7-5d1f-4671-a8ed-910da4306102" />
+## `pmd_rx_burst`
+After the comparison made in the two below modes, we arrive at this function `pmd_rx_burst` which has a time difference of 1 second between the two modes with and without rules in the entire process of 100 times.
+<img width="1850" height="965" alt="image" src="https://github.com/user-attachments/assets/0800e298-3e69-4cd5-9b1f-110bfe29644f" />
+<img width="1850" height="965" alt="image" src="https://github.com/user-attachments/assets/cd6cfab2-3a97-4a83-b407-f98ae7f99371" />
+
+### checking Event Desnsity 
+## without rule:
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7c65a252-f1ec-48b9-9204-9e94c15a5d21" />
+
+## with rule:
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/11b0aa5a-098a-4332-9ff1-ac2bac652b96" />
+
+
+
 
