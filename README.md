@@ -157,6 +157,9 @@ This event is responsible for detecting the packet protocol type (Packet Type) (
 <img width="1850" height="965" alt="image" src="https://github.com/user-attachments/assets/0800e298-3e69-4cd5-9b1f-110bfe29644f" />
 <img width="1850" height="965" alt="image" src="https://github.com/user-attachments/assets/cd6cfab2-3a97-4a83-b407-f98ae7f99371" />
 
+After the comparison made in the two above modes, we arrive at this function
+`pmd_rx_burst`
+which has a time difference of 1 second between the two modes with and without rules in the entire process of 100 times.
 ### checking Event Desnsity 
 ## without rule:
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7c65a252-f1ec-48b9-9204-9e94c15a5d21" />
