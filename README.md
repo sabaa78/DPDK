@@ -154,14 +154,20 @@ Responsible for allocating a new mbuf from the mempool for network packets. This
 Checks the free space at the beginning of the mbuf (headroom) to add headers. It is very useful in the packet sending/receiving path.
 ### `rte_net_get_ptype`
 This event is responsible for detecting the packet protocol type (Packet Type) (such as IPv4, IPv6, TCP, UDP, etc.). In tracing, ptype plays an important role in packet classification and applying rules and filters, and for this reason it is considered one of the main factors in increasing the overhead and observed time difference. In general, the activation of these events in the hot-path of packet processing, even with a very small time difference, increases the test time and reduces the event recording rate in rule-based tracing mode.
-<img width="1080" height="1254" alt="image" src="https://github.com/user-attachments/assets/97000d9f-621c-4c1c-a04b-078a15d86426" />
-<img width="1080" height="1104" alt="image" src="https://github.com/user-attachments/assets/47ff27f5-1047-4249-a730-48310ea6af93" />
+Examining three subset functions of `pmd_rx_burst` when we use rule and when we not:
+in this image we test our examin without any set rule:
+<img width="960" height="470" alt="image" src="https://github.com/user-attachments/assets/395bc73e-cc45-41a9-8db2-1aff9bdcda9d" />
+
+and this image is when we set the rule:
+<img width="960" height="240" alt="image" src="https://github.com/user-attachments/assets/57ebc554-9ccb-49c9-a443-c99fdb61a3de" />
+
+we compare duration of each subset. for example for `rte_net_get_ptype` we can see 42.111 micro seconds in rule-less type and 128.282 micro secs in with-rule type.we realize that this is because ptype subfunction is responsible for checking packet headers for the time that it wants to apply rules and filters on it.
+
 
 
 
 After the comparison made in the two above modes, we arrive at this function
 `pmd_rx_burst`
-which has a time difference of 1 second between the two modes with and without rules in the entire process of 100 times.
 ### checking Event Desnsity 
 ## without rule:
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7c65a252-f1ec-48b9-9204-9e94c15a5d21" />
